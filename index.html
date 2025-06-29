@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語神経衰弱ゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        
+        .card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .card-front {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .card-back {
+            background: white;
+            color: #333;
+            transform: rotateY(180deg);
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .card-back.word-card {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .card-back.icon-card {
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+            color: #2d3436;
+        }
+        
+        .category-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        
+        .category-btn.selected {
+            background: linear-gradient(45deg, #fd79a8, #fdcb6e) !important;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .matched {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebration {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0,-30px,0); }
+            70% { transform: translate3d(0,-15px,0); }
+            90% { transform: translate3d(0,-4px,0); }
+        }
+
+        /* 追加スタイル */
+        .selected-category-tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1.5rem;
+            margin: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .selected-category-tag:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+        }
+
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <!-- タイトル -->
+    <div class="text-center mb-8">
+        <h1 class="text-5xl font-bold text-white mb-4 animate__animated animate__bounceInDown">
+            🎮 英単語神経衰弱ゲーム 🎮
+        </h1>
+        <p class="text-xl text-white animate__animated animate__fadeInUp">
+            カテゴリを選んで楽しく英単語を覚えよう！
+        </p>
+    </div>
+
+    <!-- カテゴリ選択画面 -->
+    <div id="categoryScreen" class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl animate__animated animate__zoomIn">
+            <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">
+                📚 カテゴリを選ぼう（最大3つまで）
+            </h2>
+            
+            <!-- 選択済みカテゴリ表示エリア -->
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-700 mb-3 text-center">選択済みカテゴリ:</h3>
+                <div id="selectedCategoriesDisplay" class="min-h-[3rem] bg-gray-100 rounded-2xl p-3 flex flex-wrap items-center justify-center border-2 border-dashed border-gray-300">
+                    <span class="text-gray-500">カテゴリを選択してください</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <button class="category-btn bg-pink-400 hover:bg-pink-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="animals">
+                    🐾 動物
+                </button>
+                <button class="category-btn bg-green-400 hover:bg-green-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="foods">
+                    🍎 食べ物
+                </button>
+                <button class="category-btn bg-purple-400 hover:bg-purple-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="colors">
+                    🌈 色
+                </button>
+                <button class="category-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="numbers">
+                    🔢 数字(1-10)
+                </button>
+                <button class="category-btn bg-indigo-400 hover:bg-indigo-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="numbers2">
+                    🔢 数字(11-100)
+                </button>
+                <button class="category-btn bg-yellow-400 hover:bg-yellow-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="vehicles">
+                    🚗 乗り物
+                </button>
+                <button class="category-btn bg-cyan-400 hover:bg-cyan-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="weather">
+                    ☀️ 天気
+                </button>
+                <button class="category-btn bg-orange-400 hover:bg-orange-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="months">
+                    📅 月
+                </button>
+                <button class="category-btn bg-red-400 hover:bg-red-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="days">
+                    📅 曜日
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <p id="selectedCount" class="text-lg mb-4 text-gray-600">選択済み: 0/3</p>
+                <button id="startBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    🎯 ゲームスタート！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="gameScreen" class="max-w-6xl mx-auto hidden">
+        <div class="bg-white rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <h2 class="text-3xl font-bold text-gray-800">🎲 神経衰弱ゲーム</h2>
+                <div class="flex gap-4 items-center flex-wrap">
+                    <!-- タイマー表示 -->
+                    <div class="timer-display text-center">
+                        <div class="text-sm text-gray-600">⏱️ 経過時間</div>
+                        <div id="gameTimer" class="text-lg font-bold text-purple-600">00:00</div>
+                    </div>
+                    <div class="text-lg font-bold text-gray-600">
+                        マッチ: <span id="matchCount" class="text-green-600">0</span>/<span id="totalPairs">0</span>
+                    </div>
+                    <button id="backBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                        ← 戻る
+                    </button>
+                </div>
+            </div>
+            
+            <!-- カード配置エリア -->
+            <div id="gameBoard" class="grid gap-3 mb-6"></div>
+            
+            <!-- マッチした単語表示エリア -->
+            <div id="matchDisplay" class="text-center p-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl hidden">
+                <div class="text-white text-2xl font-bold" id="matchedWord"></div>
+                <div class="text-white text-lg" id="matchedMeaning"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- クリア画面 -->
+    <div id="clearScreen" class="max-w-2xl mx-auto hidden">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl text-center animate__animated animate__zoomIn">
+            <h2 class="text-5xl font-bold text-yellow-500 mb-4">🎉 おめでとう！ 🎉</h2>
+            <p class="text-2xl text-gray-700 mb-4">全てのペアを見つけました！</p>
+            <!-- クリアタイム表示 -->
+            <div class="timer-display text-2xl mb-6 inline-block">
+                🏆 クリアタイム: <span id="finalTime" class="text-purple-600 font-bold">00:00</span>
+            </div>
+            <div>
+                <button id="playAgainBtn" class="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-xl font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                    🔄 もう一度遊ぶ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ゲームデータ
+        const gameData = {
+            animals: [
+                {word: 'cat', meaning: 'ねこ', icon: '🐱'},
+                {word: 'dog', meaning: 'いぬ', icon: '🐶'},
+                {word: 'bird', meaning: 'とり', icon: '🐦'},
+                {word: 'fish', meaning: 'さかな', icon: '🐟'},
+                {word: 'lion', meaning: 'ライオン', icon: '🦁'},
+                {word: 'elephant', meaning: 'ぞう', icon: '🐘'},
+                {word: 'monkey', meaning: 'さる', icon: '🐵'},
+                {word: 'rabbit', meaning: 'うさぎ', icon: '🐰'},
+                {word: 'bear', meaning: 'くま', icon: '🐻'},
+                {word: 'fox', meaning: 'きつね', icon: '🦊'}
+            ],
+            foods: [
+                {word: 'apple', meaning: 'りんご', icon: '🍎'},
+                {word: 'banana', meaning: 'バナナ', icon: '🍌'},
+                {word: 'orange', meaning: 'オレンジ', icon: '🍊'},
+                {word: 'bread', meaning: 'パン', icon: '🍞'},
+                {word: 'milk', meaning: 'ミルク', icon: '🥛'},
+                {word: 'cheese', meaning: 'チーズ', icon: '🧀'},
+                {word: 'rice', meaning: 'ごはん', icon: '🍚'},
+                {word: 'egg', meaning: 'たまご', icon: '🥚'},
+                {word: 'meat', meaning: 'にく', icon: '🥩'},
+                {word: 'cake', meaning: 'ケーキ', icon: '🍰'}
+            ],
+            colors: [
+                {word: 'red', meaning: 'あか', icon: '🔴'},
+                {word: 'blue', meaning: 'あお', icon: '🔵'},
+                {word: 'green', meaning: 'みどり', icon: '🟢'},
+                {word: 'yellow', meaning: 'きいろ', icon: '🟡'},
+                {word: 'orange', meaning: 'オレンジ', icon: '🟠'},
+                {word: 'purple', meaning: 'むらさき', icon: '🟣'},
+                {word: 'pink', meaning: 'ピンク', icon: '🩷'},
+                {word: 'brown', meaning: 'ちゃいろ', icon: '🤎'},
+                {word: 'black', meaning: 'くろ', icon: '⚫'},
+                {word: 'white', meaning: 'しろ', icon: '⚪'}
+            ],
+            numbers: [
+                {word: 'one', meaning: 'いち', icon: '1️⃣'},
+                {word: 'two', meaning: 'に', icon: '2️⃣'},
+                {word: 'three', meaning: 'さん', icon: '3️⃣'},
+                {word: 'four', meaning: 'よん', icon: '4️⃣'},
+                {word: 'five', meaning: 'ご', icon: '5️⃣'},
+                {word: 'six', meaning: 'ろく', icon: '6️⃣'},
+                {word: 'seven', meaning: 'なな', icon: '7️⃣'},
+                {word: 'eight', meaning: 'はち', icon: '8️⃣'},
+                {word: 'nine', meaning: 'きゅう', icon: '9️⃣'},
+                {word: 'ten', meaning: 'じゅう', icon: '🔟'}
+            ],
+            numbers2: [
+                {word: 'eleven', meaning: 'じゅういち', icon: '🔢'},
+                {word: 'twelve', meaning: 'じゅうに', icon: '🕐'},
+                {word: 'thirteen', meaning: 'じゅうさん', icon: '1️⃣3️⃣'},
+                {word: 'fourteen', meaning: 'じゅうよん', icon: '1️⃣4️⃣'},
+                {word: 'fifteen', meaning: 'じゅうご', icon: '1️⃣5️⃣'},
+                {word: 'twenty', meaning: 'にじゅう', icon: '2️⃣0️⃣'},
+                {word: 'thirty', meaning: 'さんじゅう', icon: '3️⃣0️⃣'},
+                {word: 'fifty', meaning: 'ごじゅう', icon: '5️⃣0️⃣'},
+                {word: 'eighty', meaning: 'はちじゅう', icon: '8️⃣0️⃣'},
+                {word: 'hundred', meaning: 'ひゃく', icon: '💯'}
+            ],
+            vehicles: [
+                {word: 'car', meaning: 'くるま', icon: '🚗'},
+                {word: 'bus', meaning: 'バス', icon: '🚌'},
+                {word: 'train', meaning: 'でんしゃ', icon: '🚃'},
+                {word: 'bike', meaning: 'じてんしゃ', icon: '🚲'},
+                {word: 'plane', meaning: 'ひこうき', icon: '✈️'},
+                {word: 'ship', meaning: 'ふね', icon: '🚢'},
+                {word: 'truck', meaning: 'トラック', icon: '🚚'},
+                {word: 'taxi', meaning: 'タクシー', icon: '🚕'},
+                {word: 'rocket', meaning: 'ロケット', icon: '🚀'},
+                {word: 'helicopter', meaning: 'ヘリコプター', icon: '🚁'}
+            ],
+            weather: [
+                {word: 'sunny', meaning: 'はれ', icon: '☀️'},
+                {word: 'cloudy', meaning: 'くもり', icon: '☁️'},
+                {word: 'rainy', meaning: 'あめ', icon: '☔'},
+                {word: 'snowy', meaning: 'ゆき', icon: '❄️'},
+                {word: 'windy', meaning: 'かぜ', icon: '💨'},
+                {word: 'stormy', meaning: 'あらし', icon: '⛈️'},
+                {word: 'foggy', meaning: 'きり', icon: '🌫️'},
+                {word: 'clear', meaning: 'かいせい', icon: '✨'}
+            ],
+            months: [
+                {word: 'January', meaning: '1月', icon: '⛄'},
+                {word: 'February', meaning: '2月', icon: '🍫'},
+                {word: 'March', meaning: '3月', icon: '🌸'},
+                {word: 'April', meaning: '4月', icon: '🌱'},
+                {word: 'May', meaning: '5月', icon: '🎏'},
+                {word: 'June', meaning: '6月', icon: '🐸'},
+                {word: 'July', meaning: '7月', icon: '🏖️'},
+                {word: 'August', meaning: '8月', icon: '🌻'},
+                {word: 'September', meaning: '9月', icon: '🎑'},
+                {word: 'October', meaning: '10月', icon: '🎃'}
+            ],
+            days: [
+                {word: 'Sunday', meaning: 'にちようび', icon: '📅☀️'},
+                {word: 'Monday', meaning: 'げつようび', icon: '📅🌙'},
+                {word: 'Tuesday', meaning: 'かようび', icon: '📅🔥'},
+                {word: 'Wednesday', meaning: 'すいようび', icon: '📅💧'},
+                {word: 'Thursday', meaning: 'もくようび', icon: '📅🌳'},
+                {word: 'Friday', meaning: 'きんようび', icon: '📅💰'},
+                {word: 'Saturday', meaning: 'どようび', icon: '📅🌍'}
+            ]
+        };
+
+        // カテゴリ名の日本語対応
+        const categoryNames = {
+            animals: '🐾 動物',
+            foods: '🍎 食べ物',
+            colors: '🌈 色',
+            numbers: '🔢 数字(1-10)',
+            numbers2: '🔢 数字(11-100)',
+            vehicles: '🚗 乗り物',
+            weather: '☀️ 天気',
+            months: '📅 月',
+            days: '📅 曜日'
+        };
+
+        // ゲーム状態
+        let selectedCategories = [];
+        let gameCards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let totalPairs = 0;
+        let startTime = 0;
+        let gameTimer = null;
+
+        // DOM要素
+        const categoryScreen = document.getElementById('categoryScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const clearScreen = document.getElementById('clearScreen');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const selectedCountEl = document.getElementById('selectedCount');
+        const selectedCategoriesDisplay = document.getElementById('selectedCategoriesDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const backBtn = document.getElementById('backBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const gameBoard = document.getElementById('gameBoard');
+        const matchDisplay = document.getElementById('matchDisplay');
+        const matchedWord = document.getElementById('matchedWord');
+        const matchedMeaning = document.getElementById('matchedMeaning');
+        const matchCount = document.getElementById('matchCount');
+        const totalPairsEl = document.getElementById('totalPairs');
+        const gameTimerEl = document.getElementById('gameTimer');
+        const finalTimeEl = document.getElementById('finalTime');
+
+        // イベントリスナー
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', () => toggleCategory(btn));
+        });
+
+        startBtn.addEventListener('click', startGame);
+        backBtn.addEventListener('click', backToCategory);
+        playAgainBtn.addEventListener('click', resetGame);
+
+        // カテゴリ選択処理
+        function toggleCategory(btn) {
+            const category = btn.dataset.category;
+            
+            if (selectedCategories.includes(category)) {
+                selectedCategories = selectedCategories.filter(c => c !== category);
+                btn.classList.remove('selected');
+            } else {
+                if (selectedCategories.length < 3) {
+                    selectedCategories.push(category);
+                    btn.classList.add('selected');
+                }
+            }
+            
+            updateUI();
+        }
+
+        // 選択済みカテゴリタグの削除
+        function removeCategory(category) {
+            selectedCategories = selectedCategories.filter(c => c !== category);
+            // ボタンの選択状態も解除
+            categoryButtons.forEach(btn => {
+                if (btn.dataset.category === category) {
+                    btn.classList.remove('selected');
+                }
+            });
+            updateUI();
+        }
+
+        function updateUI() {
+            selectedCountEl.textContent = `選択済み: ${selectedCategories.length}/3`;
+            startBtn.disabled = selectedCategories.length === 0;
+            
+            // 選択済みカテゴリの表示
+            if (selectedCategories.length === 0) {
+                selectedCategoriesDisplay.innerHTML = '<span class="text-gray-500">カテゴリを選択してください</span>';
+            } else {
+                selectedCategoriesDisplay.innerHTML = selectedCategories.map(category => 
+                    `<span class="selected-category-tag" onclick="removeCategory('${category}')">
+                        ${categoryNames[category]}
+                        <i class="fas fa-times"></i>
+                    </span>`
+                ).join('');
+            }
+        }
+
+        // タイマー機能
+        function startTimer() {
+            startTime = Date.now();
+            gameTimer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            gameTimerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function stopTimer() {
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            finalTimeEl.textContent = timeString;
+            return timeString;
+        }
+
+        // ゲーム開始
+        function startGame() {
+            // 選択されたカテゴリからカードを作成
+            gameCards = [];
+            selectedCategories.forEach(category => {
+                gameData[category].forEach(item => {
+                    // 英単語カード（日本語表示なし）
+                    gameCards.push({
+                        id: `${category}-${item.word}-word`,
+                        type: 'word',
+                        content: item.word,
+                        meaning: item.meaning,
+                        icon: item.icon,
+                        pairId: `${category}-${item.word}`
+                    });
+                    
+                    // アイコンカード（日本語表示あり）
+                    gameCards.push({
+                        id: `${category}-${item.word}-icon`,
+                        type: 'icon',
+                        content: item.icon,
+                        meaning: item.meaning,
+                        word: item.word,
+                        pairId: `${category}-${item.word}`
+                    });
+                });
+            });
+
+            // カードをシャッフル
+            shuffleArray(gameCards);
+            
+            totalPairs = gameCards.length / 2;
+            matchedPairs = 0;
+            
+            // UI更新
+            totalPairsEl.textContent = totalPairs;
+            matchCount.textContent = matchedPairs;
+            
+            // タイマー開始
+            startTimer();
+            
+            // ゲーム画面に切り替え
+            categoryScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            renderGameBoard();
+        }
+
+        // ゲームボード描画
+        function renderGameBoard() {
+            const cols = Math.ceil(Math.sqrt(gameCards.length));
+            gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            gameBoard.innerHTML = '';
+            
+            gameCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card h-24 w-full';
+                cardEl.dataset.cardId = card.id;
+                cardEl.innerHTML = `
+                    <div class="card-inner h-full">
+                        <div class="card-front">
+                            <i class="fas fa-question text-4xl"></i>
+                        </div>
+                        <div class="card-back ${card.type}-card">
+                            <div class="text-2xl">${card.content}</div>
+                            ${card.type === 'icon' ? `<div class="text-sm opacity-75">(${card.meaning})</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                cardEl.addEventListener('click', () => flipCard(cardEl, card));
+                gameBoard.appendChild(cardEl);
+            });
+        }
+
+        // カードめくり処理
+        function flipCard(cardEl, card) {
+            if (cardEl.classList.contains('flipped') || 
+                cardEl.classList.contains('matched') ||
+                flippedCards.length >= 2) {
+                return;
+            }
+            
+            cardEl.classList.add('flipped');
+            flippedCards.push({element: cardEl, card: card});
+            
+            // カードをめくったときに音声読み上げ
+            speakWord(card.type === 'word' ? card.content : card.word);
+            
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        // ペア判定
+        function checkMatch() {
+            const [first, second] = flippedCards;
+            
+            if (first.card.pairId === second.card.pairId) {
+                // マッチした場合
+                first.element.classList.add('matched', 'celebration');
+                second.element.classList.add('matched', 'celebration');
+                
+                matchedPairs++;
+                matchCount.textContent = matchedPairs;
+                
+                // マッチした単語を表示し、読み上げ
+                const wordCard = first.card.type === 'word' ? first.card : second.card;
+                showMatch(wordCard);
+                speakWord(wordCard.content);
+                
+                // ゲームクリア判定
+                if (matchedPairs === totalPairs) {
+                    setTimeout(() => {
+                        stopTimer();
+                        showClearScreen();
+                    }, 2000);
+                }
+            } else {
+                // マッチしなかった場合
+                setTimeout(() => {
+                    first.element.classList.remove('flipped');
+                    second.element.classList.remove('flipped');
+                }, 500);
+            }
+            
+            flippedCards = [];
+        }
+
+        // マッチ表示
+        function showMatch(wordCard) {
+            matchedWord.textContent = wordCard.content;
+            matchedMeaning.textContent = `(${wordCard.meaning})`;
+            matchDisplay.classList.remove('hidden');
+            matchDisplay.classList.add('pulse');
+            
+            setTimeout(() => {
+                matchDisplay.classList.add('hidden');
+                matchDisplay.classList.remove('pulse');
+            }, 3000);
+        }
+
+        // 音声読み上げ
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // クリア画面表示
+        function showClearScreen() {
+            gameScreen.classList.add('hidden');
+            clearScreen.classList.remove('hidden');
+        }
+
+        // ゲームリセット
+        function resetGame() {
+            selectedCategories = [];
+            categoryButtons.forEach(btn => btn.classList.remove('selected'));
+            clearScreen.classList.add('hidden');
+            categoryScreen.classList.remove('hidden');
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            updateUI();
+        }
+
+        // カテゴリ選択に戻る
+        function backToCategory() {
+            gameScreen.classList.add('hidden');
+            categoryScreen.classList.remove('hidden');
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+        }
+
+        // 配列シャッフル
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // グローバル関数として定義（HTMLから呼び出すため）
+        window.removeCategory = removeCategory;
+    </script>
+</body>
+</html>
