@@ -139,16 +139,79 @@
             padding: 0.5rem 1rem;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+
+        /* ルビのスタイル調整 */
+        ruby {
+            ruby-align: center;
+        }
+        
+        rt {
+            font-size: 0.6em;
+            line-height: 1;
+            color: inherit;
+        }
+        
+        /* ボタン内のルビサイズ調整 */
+        .category-btn ruby rt {
+            font-size: 0.5em;
+        }
+        
+        /* カード内のルビサイズ調整 */
+        .card-back ruby rt {
+            font-size: 0.5em;
+        }
+
+        /* ルビ非表示時のスタイル */
+        .ruby-hidden rt {
+            display: none;
+        }
+
+        /* ルビ切り替えボタンのスタイル */
+        .ruby-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .ruby-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+        }
+
+        .ruby-toggle.ruby-off {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+        }
+
+        .ruby-toggle.ruby-off:hover {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+        }
     </style>
 </head>
 <body class="p-4">
+    <!-- ルビ切り替えボタン -->
+    <button id="rubyToggle" class="ruby-toggle" onclick="toggleRuby()">
+        <i class="fas fa-font"></i> ルビ表示
+    </button>
+
     <!-- タイトル -->
     <div class="text-center mb-8">
         <h1 class="text-5xl font-bold text-white mb-4 animate__animated animate__bounceInDown">
-            🎮 英単語神経衰弱ゲーム 🎮
+            🎮 <ruby>英<rt>えい</rt>単<rt>たん</rt>語<rt>ご</rt>神<rt>しん</rt>経<rt>けい</rt>衰<rt>すい</rt>弱<rt>じゃく</rt></ruby>ゲーム 🎮
         </h1>
         <p class="text-xl text-white animate__animated animate__fadeInUp">
-            カテゴリを選んで楽しく英単語を覚えよう！
+            <ruby>カテゴリ<rt>かてごり</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んで<ruby>楽<rt>たの</rt></ruby>しく<ruby>英<rt>えい</rt>単<rt>たん</rt>語<rt>ご</rt></ruby>を<ruby>覚<rt>おぼ</rt></ruby>えよう！
         </p>
     </div>
 
@@ -156,49 +219,49 @@
     <div id="categoryScreen" class="max-w-4xl mx-auto">
         <div class="bg-white rounded-3xl p-8 shadow-2xl animate__animated animate__zoomIn">
             <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">
-                📚 カテゴリを選ぼう（最大3つまで）
+                📚 <ruby>カテゴリ<rt>かてごり</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぼう（<ruby>最<rt>さい</rt>大<rt>だい</rt></ruby>3つまで）
             </h2>
             
             <!-- 選択済みカテゴリ表示エリア -->
             <div class="mb-6">
-                <h3 class="text-lg font-bold text-gray-700 mb-3 text-center">選択済みカテゴリ:</h3>
+                <h3 class="text-lg font-bold text-gray-700 mb-3 text-center"><ruby>選<rt>せん</rt>択<rt>たく</rt>済<rt>ず</rt></ruby>み<ruby>カテゴリ<rt>かてごり</rt></ruby>:</h3>
                 <div id="selectedCategoriesDisplay" class="min-h-[3rem] bg-gray-100 rounded-2xl p-3 flex flex-wrap items-center justify-center border-2 border-dashed border-gray-300">
-                    <span class="text-gray-500">カテゴリを選択してください</span>
+                    <span class="text-gray-500"><ruby>カテゴリ<rt>かてごり</rt></ruby>を<ruby>選<rt>せん</rt>択<rt>たく</rt></ruby>してください</span>
                 </div>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
                 <button class="category-btn bg-pink-400 hover:bg-pink-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="animals">
-                    🐾 動物
+                    🐾 <ruby>動<rt>どう</rt>物<rt>ぶつ</rt></ruby>
                 </button>
                 <button class="category-btn bg-green-400 hover:bg-green-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="foods">
-                    🍎 食べ物
+                    🍎 <ruby>食<rt>た</rt></ruby>べ<ruby>物<rt>もの</rt></ruby>
                 </button>
                 <button class="category-btn bg-purple-400 hover:bg-purple-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="colors">
-                    🌈 色
+                    🌈 <ruby>色<rt>いろ</rt></ruby>
                 </button>
                 <button class="category-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="numbers">
-                    🔢 数字(1-10)
+                    🔢 <ruby>数<rt>すう</rt>字<rt>じ</rt></ruby>(1-10)
                 </button>
                 <button class="category-btn bg-indigo-400 hover:bg-indigo-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="numbers2">
-                    🔢 数字(11-100)
+                    🔢 <ruby>数<rt>すう</rt>字<rt>じ</rt></ruby>(11-100)
                 </button>
                 <button class="category-btn bg-yellow-400 hover:bg-yellow-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="vehicles">
-                    🚗 乗り物
+                    🚗 <ruby>乗<rt>の</rt></ruby>り<ruby>物<rt>もの</rt></ruby>
                 </button>
                 <button class="category-btn bg-cyan-400 hover:bg-cyan-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="weather">
-                    ☀️ 天気
+                    ☀️ <ruby>天<rt>てん</rt>気<rt>き</rt></ruby>
                 </button>
                 <button class="category-btn bg-orange-400 hover:bg-orange-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="months">
-                    📅 月
+                    📅 <ruby>月<rt>つき</rt></ruby>
                 </button>
                 <button class="category-btn bg-red-400 hover:bg-red-500 text-white p-4 rounded-2xl text-lg font-bold" data-category="days">
-                    📅 曜日
+                    📅 <ruby>曜<rt>よう</rt>日<rt>び</rt></ruby>
                 </button>
             </div>
             
             <div class="text-center">
-                <p id="selectedCount" class="text-lg mb-4 text-gray-600">選択済み: 0/3</p>
+                <p id="selectedCount" class="text-lg mb-4 text-gray-600"><ruby>選<rt>せん</rt>択<rt>たく</rt>済<rt>ず</rt></ruby>み: 0/3</p>
                 <button id="startBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     🎯 ゲームスタート！
                 </button>
@@ -210,18 +273,18 @@
     <div id="gameScreen" class="max-w-6xl mx-auto hidden">
         <div class="bg-white rounded-3xl p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-                <h2 class="text-3xl font-bold text-gray-800">🎲 神経衰弱ゲーム</h2>
+                <h2 class="text-3xl font-bold text-gray-800">🎲 <ruby>神<rt>しん</rt>経<rt>けい</rt>衰<rt>すい</rt>弱<rt>じゃく</rt></ruby>ゲーム</h2>
                 <div class="flex gap-4 items-center flex-wrap">
                     <!-- タイマー表示 -->
                     <div class="timer-display text-center">
-                        <div class="text-sm text-gray-600">⏱️ 経過時間</div>
+                        <div class="text-sm text-gray-600">⏱️ <ruby>経<rt>けい</rt>過<rt>か</rt>時<rt>じ</rt>間<rt>かん</rt></ruby></div>
                         <div id="gameTimer" class="text-lg font-bold text-purple-600">00:00</div>
                     </div>
                     <div class="text-lg font-bold text-gray-600">
                         マッチ: <span id="matchCount" class="text-green-600">0</span>/<span id="totalPairs">0</span>
                     </div>
                     <button id="backBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                        ← 戻る
+                        ← <ruby>戻<rt>もど</rt></ruby>る
                     </button>
                 </div>
             </div>
@@ -241,14 +304,14 @@
     <div id="clearScreen" class="max-w-2xl mx-auto hidden">
         <div class="bg-white rounded-3xl p-8 shadow-2xl text-center animate__animated animate__zoomIn">
             <h2 class="text-5xl font-bold text-yellow-500 mb-4">🎉 おめでとう！ 🎉</h2>
-            <p class="text-2xl text-gray-700 mb-4">全てのペアを見つけました！</p>
+            <p class="text-2xl text-gray-700 mb-4"><ruby>全<rt>すべ</rt></ruby>てのペアを<ruby>見<rt>み</rt></ruby>つけました！</p>
             <!-- クリアタイム表示 -->
             <div class="timer-display text-2xl mb-6 inline-block">
-                🏆 クリアタイム: <span id="finalTime" class="text-purple-600 font-bold">00:00</span>
+                🏆 <ruby>クリア<rt>くりあ</rt>タイム<rt>たいむ</rt></ruby>: <span id="finalTime" class="text-purple-600 font-bold">00:00</span>
             </div>
             <div>
                 <button id="playAgainBtn" class="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white text-xl font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105">
-                    🔄 もう一度遊ぶ
+                    🔄 もう<ruby>一<rt>いち</rt>度<rt>ど</rt></ruby><ruby>遊<rt>あそ</rt></ruby>ぶ
                 </button>
             </div>
         </div>
@@ -364,15 +427,15 @@
 
         // カテゴリ名の日本語対応
         const categoryNames = {
-            animals: '🐾 動物',
-            foods: '🍎 食べ物',
-            colors: '🌈 色',
-            numbers: '🔢 数字(1-10)',
-            numbers2: '🔢 数字(11-100)',
-            vehicles: '🚗 乗り物',
-            weather: '☀️ 天気',
-            months: '📅 月',
-            days: '📅 曜日'
+            animals: '🐾 <ruby>動<rt>どう</rt>物<rt>ぶつ</rt></ruby>',
+            foods: '🍎 <ruby>食<rt>た</rt></ruby>べ<ruby>物<rt>もの</rt></ruby>',
+            colors: '🌈 <ruby>色<rt>いろ</rt></ruby>',
+            numbers: '🔢 <ruby>数<rt>すう</rt>字<rt>じ</rt></ruby>(1-10)',
+            numbers2: '🔢 <ruby>数<rt>すう</rt>字<rt>じ</rt></ruby>(11-100)',
+            vehicles: '🚗 <ruby>乗<rt>の</rt></ruby>り<ruby>物<rt>もの</rt></ruby>',
+            weather: '☀️ <ruby>天<rt>てん</rt>気<rt>き</rt></ruby>',
+            months: '📅 <ruby>月<rt>つき</rt></ruby>',
+            days: '📅 <ruby>曜<rt>よう</rt>日<rt>び</rt></ruby>'
         };
 
         // ゲーム状態
@@ -383,6 +446,7 @@
         let totalPairs = 0;
         let startTime = 0;
         let gameTimer = null;
+        let rubyEnabled = true; // ルビ表示状態
 
         // DOM要素
         const categoryScreen = document.getElementById('categoryScreen');
@@ -402,6 +466,7 @@
         const totalPairsEl = document.getElementById('totalPairs');
         const gameTimerEl = document.getElementById('gameTimer');
         const finalTimeEl = document.getElementById('finalTime');
+        const rubyToggleBtn = document.getElementById('rubyToggle');
 
         // イベントリスナー
         categoryButtons.forEach(btn => {
@@ -442,12 +507,12 @@
         }
 
         function updateUI() {
-            selectedCountEl.textContent = `選択済み: ${selectedCategories.length}/3`;
+            selectedCountEl.innerHTML = `<ruby>選<rt>せん</rt>択<rt>たく</rt>済<rt>ず</rt></ruby>み: ${selectedCategories.length}/3`;
             startBtn.disabled = selectedCategories.length === 0;
             
             // 選択済みカテゴリの表示
             if (selectedCategories.length === 0) {
-                selectedCategoriesDisplay.innerHTML = '<span class="text-gray-500">カテゴリを選択してください</span>';
+                selectedCategoriesDisplay.innerHTML = '<span class="text-gray-500"><ruby>カテゴリ<rt>かてごり</rt></ruby>を<ruby>選<rt>せん</rt>択<rt>たく</rt></ruby>してください</span>';
             } else {
                 selectedCategoriesDisplay.innerHTML = selectedCategories.map(category => 
                     `<span class="selected-category-tag" onclick="removeCategory('${category}')">
@@ -675,6 +740,24 @@
 
         // グローバル関数として定義（HTMLから呼び出すため）
         window.removeCategory = removeCategory;
+
+        // ルビ表示切り替え機能
+        function toggleRuby() {
+            rubyEnabled = !rubyEnabled;
+            const body = document.body;
+            
+            if (rubyEnabled) {
+                body.classList.remove('ruby-hidden');
+                rubyToggleBtn.innerHTML = '<i class="fas fa-font"></i> ルビ表示';
+                rubyToggleBtn.classList.remove('ruby-off');
+            } else {
+                body.classList.add('ruby-hidden');
+                rubyToggleBtn.innerHTML = '<i class="fas fa-font"></i> ルビ非表示';
+                rubyToggleBtn.classList.add('ruby-off');
+            }
+        }
+
+        window.toggleRuby = toggleRuby;
     </script>
 </body>
 </html>
